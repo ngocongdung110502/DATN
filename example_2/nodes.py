@@ -60,22 +60,23 @@ class SensorNode:
         return updated_nodes
     
     # function defines send query packet to node
-    def send_query_packet(self, query_packet, communication_radius, timer, packet_size): 
+    def send_query_packet(self, query_packet, communication_radius, packet_size): 
         ack_packets = []
 
         self.consume_energy('tx', packet_size)
 
         for neighbor in self.neighbors:
             if np.linalg.norm(self.position - neighbor.position) <= communication_radius:
-                ack_packet = neighbor.receive_query_packet(query_packet, communication_radius, packet_size)
+                ack_packet = neighbor.send_ack_packet(query_packet, communication_radius, packet_size)
                 if ack_packet:
                     ack_packets.append(ack_packet)
 
-        timer.expire()
+        #timer.expire()
+
         return ack_packets
     
-    def receive_query_packet(self, query_packet, communication_radius, packet_size):
-        self.consume_energy('rx', packet_size)
+    def send_ack_packet(self, query_packet, communication_radius, packet_size):
+        self.consume_energy('tx', packet_size)
 
         if query_packet.hc > self.hc and query_packet.sender_id not in self.memory_queue:
             ack_packet = AckPacket(receiver_id=query_packet.sender_id, sender_id=self.id, energy=self.energy, hc=self.hc)
@@ -83,11 +84,11 @@ class SensorNode:
             timer = Timer(2 * communication_radius / self.speed_of_sound)
 
             new_query_packet = QueryPacket(self.id, query_packet.source_id, query_packet.dpsn, self.hc)
-            self.send_query_packet(query_packet, communication_radius, timer, packet_size)
+            self.send_query_packet(new_query_packet, communication_radius, packet_size)
             return ack_packet
         return None
     
-    def select_optimal_node(self, ack_packets):
+    def select_optimal_node(self, ack_packets, energy_threshold):
         optimal_node = None
         min_hc = min((ack_packet.hc for ack_packet in ack_packets if ack_packet), default=NINF)
         candidates = [ack_packet for ack_packet in ack_packets if ack_packet and ack_packet.hc == min_hc]

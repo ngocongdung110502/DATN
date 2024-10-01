@@ -52,7 +52,7 @@ def calculate_neighbors(nodes, sinks, sources, communication_radius):
         node.neighbors = [n for n in all_nodes if np.linalg.norm(node.position - n.position) <= communication_radius and n != node]
 
 
-def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, depth_layers, depth_range, communication_radius, num_rounds):
+def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, depth_layers, depth_range, communication_radius, num_rounds, energy_threshold):
     nodes, sinks, sources = initialize_nodes(num_nodes, num_sinks, num_source_node, space_dim, depth_layers, depth_range)
     calculate_neighbors(nodes, sinks, sources, communication_radius)
 
@@ -110,19 +110,15 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
                         paths.append((node, neighbor))  # Lưu lại các đường đi
             updated_nodes = next_updated_nodes
     
-    # Find node have max hopcount
-    max_hc = max((node.hc for node in nodes), default=NINF)
-    max_hc_nodes = [node for node in nodes if node.hc == max_hc]
-    
     total_hop_counts = 0
 
-    for dpsn in range(100):
-        for max_hc_node in max_hc_nodes:
+    for dpsn in range(num_rounds):
+        for source in sources:
             packet_size = 4
             for node in nodes:
-                node.memory_queue.clear()
+                node.memory_queue.clear()   
             
-            current_node = max_hc_node
+            current_node = source
             hop_count = 0
             path = []
             while not current_node.is_sink:
@@ -131,7 +127,19 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
                 ack_packets = current_node.send_query_packet(query_packet, communication_radius, packet_size)
                 
 
-                optimal_node = current_node.select_optimal_node
+                optimal_node = current_node.select_optimal_node(ack_packets, energy_threshold)
+    
+    
+    for node in nodes:
+        print(f'Node ID: {node.id}, Position: {node.position}, HC: {node.hc}, Energy: {node.energy}, GPSN: {node.gpsn}')
+    
+    for sink in sinks:
+        print(f'Sink ID: {sink.id}, Position: {sink.position}, HC: {sink.hc}, Energy: {sink.energy}, GPSN: {sink.gpsn}')
+    
+    for source in sources:
+        print(f'Source ID: {source.id}, Position: {source.position}, HC: {source.hc}, Energy: {source.energy}, GPSN: {source.gpsn}')
+    
+    return nodes, sinks, sources, paths
 
     '''
     for max_hc_node in max_hc_nodes:
@@ -175,6 +183,10 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
     
     for sink in sinks:
         print(f'Sink ID: {sink.id}, Position: {sink.position}, HC: {sink.hc}, Energy: {sink.energy}, GPSN: {sink.gpsn}')
+    
+    for source in sources:
+        print(f'Source ID: {source.id}, Position: {source.position}, HC: {source.hc}, Energy: {source.energy}, GPSN: {source.gpsn}')
+    
     
     
     print(f"PDR: {sum(PDR)/num_rounds}")
