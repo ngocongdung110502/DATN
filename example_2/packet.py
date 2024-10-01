@@ -18,12 +18,12 @@ class AckPacket:
         self.hc = hc
 
 class DataPacket:
-    def __init__(self, update_state, source_id, receiver_id, dpsn, data_size):
-        self.update_state = update_state
+    def __init__(self, source_id, receiver_id, dpsn, size):
+        # self.update_state = update_state
         self.source_id = source_id
         self.receiver_id = receiver_id
         self.dpsn = dpsn
-        self.data_size = data_size
+        self.size = size
     
 class CheckPacket:
     def __init__(self, update_state):

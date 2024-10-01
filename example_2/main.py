@@ -11,5 +11,5 @@ COMMUNICATION_RADIUS = 30
 NUM_ROUNDS = 100
 ENERGY_THRESHOLD = 1
 
-nodes, sinks, sources, paths= simulate_guiding_network(NUM_NODES, NUM_SINKS, NUM_SOURCE_NODE, SPACE_DIM, DEPTH_LAYERS, DEPTH_RANGE, COMMUNICATION_RADIUS, NUM_ROUNDS, ENERGY_THRESHOLD)
-visualize_network(nodes, sinks, sources, paths)
+nodes, sinks, sources, paths, optimal_paths = simulate_guiding_network(NUM_NODES, NUM_SINKS, NUM_SOURCE_NODE, SPACE_DIM, DEPTH_LAYERS, DEPTH_RANGE, COMMUNICATION_RADIUS, NUM_ROUNDS, ENERGY_THRESHOLD)
+visualize_network(nodes, sinks, sources, paths, optimal_paths)

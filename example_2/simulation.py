@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from nodes import SensorNode, Timer
-from packet import GUIDEPacket, QueryPacket, AckPacket
+from packet import GUIDEPacket, QueryPacket, AckPacket, DataPacket
 
 NINF = float('-inf')
 
@@ -98,7 +98,7 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
     # Broadcast GUIDEPacket to set up guiding network
     for sink in sinks:
         packet = GUIDEPacket(sink.gpsn, sink.hc)
-        packet_size = 4
+        packet_size = 32
         updated_nodes = sink.broadcast_packet(packet, packet_size)
 
         while updated_nodes:
@@ -109,75 +109,42 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
                     if node.hc != neighbor.hc:
                         paths.append((node, neighbor))  # Lưu lại các đường đi
             updated_nodes = next_updated_nodes
-    
-    total_hop_counts = 0
 
     for dpsn in range(num_rounds):
         for source in sources:
-            packet_size = 4
+            print(f'Round {dpsn} with source {source.id}')
+            packet_size = 32
             for node in nodes:
                 node.memory_queue.clear()   
             
             current_node = source
             hop_count = 0
-            path = []
+            data_packet_paths = [source]
             while not current_node.is_sink:
                 ack_packets = []
                 query_packet = QueryPacket(current_node.id, current_node.id, dpsn, current_node.hc)
                 ack_packets = current_node.send_query_packet(query_packet, communication_radius, packet_size)
-                
+                print(f'Node {current_node.id} received ack_packets: {[p.sender_id for p in ack_packets]}')
 
                 optimal_node = current_node.select_optimal_node(ack_packets, energy_threshold)
-    
-    
-    for node in nodes:
-        print(f'Node ID: {node.id}, Position: {node.position}, HC: {node.hc}, Energy: {node.energy}, GPSN: {node.gpsn}')
-    
-    for sink in sinks:
-        print(f'Sink ID: {sink.id}, Position: {sink.position}, HC: {sink.hc}, Energy: {sink.energy}, GPSN: {sink.gpsn}')
-    
-    for source in sources:
-        print(f'Source ID: {source.id}, Position: {source.position}, HC: {source.hc}, Energy: {source.energy}, GPSN: {source.gpsn}')
-    
-    return nodes, sinks, sources, paths
 
-    '''
-    for max_hc_node in max_hc_nodes:
-        packet_size = 4
-        for node in nodes:
-            node.memory_queue.clear()
-
-        current_node = max_hc_node
-        hop_count = 0
-        path = []
-        while not current_node.is_sink:
-            ack_packets = []
-            for neighbor in current_node.neighbors:
-                query_packet = QueryPacket(current_node.id, current_node.id, current_node.gpsn, current_node.hc)
-                ack_packet = neighbor.receive_query_packet(query_packet, communication_radius)
-                if ack_packet:
-                    ack_packets.append(ack_packet)
-
-            optimal_relay = current_node.select_optimal_relay(ack_packets, energy_thershold) 
-
-            if optimal_relay:
-                print(f'Optimal relay selected by {current_node.id}: {optimal_relay.sender_id}')
-                next_node = next(n for n in current_node.neighbors if n.id == optimal_relay.sender_id)
-                optimal_paths.append((current_node, next_node))
-                path.append((current_node, next_node))
-                current_node = next_node
-                hop_count += 1
-            else:
-                print(f'No optimal relay found from node {current_node.id}')
-                break
-        all_max_hc_  
+                if optimal_node:
+                    print(f'Optimal node selected by {current_node.id}: {optimal_node.sender_id}')
+                    next_node = next(n for n in current_node.neighbors if n.id == optimal_node.sender_id)
+                    data_packet = DataPacket(source.id, next_node.id, dpsn, 400)
+                    current_node.send_data_packet(data_packet, next_node)
+                    data_packet_paths.append(next_node)
+                    optimal_paths.append((current_node, next_node))
+                    current_node = next_node
+                    hop_count += 1
+                else:
+                    print(f'No optimal node found from node {current_node.id}')
+                    break
             
+            print(f'Number of nodes from source to sink for {source.id}: {hop_count}')
+            print(f'Data packet {dpsn} pass through nodes: {[node.id for node in data_packet_paths]}')
 
-    return nodes, sinks, sources, paths
-    
-    
-    
-    
+            
     for node in nodes:
         print(f'Node ID: {node.id}, Position: {node.position}, HC: {node.hc}, Energy: {node.energy}, GPSN: {node.gpsn}')
     
@@ -187,17 +154,10 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
     for source in sources:
         print(f'Source ID: {source.id}, Position: {source.position}, HC: {source.hc}, Energy: {source.energy}, GPSN: {source.gpsn}')
     
-    
-    
-    print(f"PDR: {sum(PDR)/num_rounds}")
-    print(f"Average E2E Delay: {sum(average_delay)/len(average_delay)}")
-    print(f"Average Residual Energy: {sum(average_residual_energy)/len(average_residual_energy)}")
-    print(f"Number of Alive Sensor Nodes: {sum(alive_nodes_count)/len(alive_nodes_count)}")
+    return nodes, sinks, sources, paths, optimal_paths
 
-    return nodes, sinks, paths, optimal_paths
-    '''
 
-def visualize_network(nodes, sinks, sources, paths):
+def visualize_network(nodes, sinks, sources, paths, optimal_paths):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
@@ -221,6 +181,10 @@ def visualize_network(nodes, sinks, sources, paths):
         ax.plot([node.position[0], neighbor.position[0]], 
                 [node.position[1], neighbor.position[1]], 
                 [node.position[2], neighbor.position[2]], 'k-', lw=0.5)
+        
+    for path in optimal_paths:
+        node, next_node = path
+        ax.plot([node.position[0], next_node.position[0]], [node.position[1], next_node.position[1]], [node.position[2], next_node.position[2]], 'r-', lw=2)
 
 
     ax.set_xlabel('X')

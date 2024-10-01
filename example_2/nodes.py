@@ -67,8 +67,10 @@ class SensorNode:
 
         for neighbor in self.neighbors:
             if np.linalg.norm(self.position - neighbor.position) <= communication_radius:
+                neighbor.consume_energy('rx', packet_size)
                 ack_packet = neighbor.send_ack_packet(query_packet, communication_radius, packet_size)
                 if ack_packet:
+                    self.consume_energy('rx', packet_size)
                     ack_packets.append(ack_packet)
 
         #timer.expire()
@@ -81,10 +83,11 @@ class SensorNode:
         if query_packet.hc > self.hc and query_packet.sender_id not in self.memory_queue:
             ack_packet = AckPacket(receiver_id=query_packet.sender_id, sender_id=self.id, energy=self.energy, hc=self.hc)
             self.memory_queue.add(query_packet.sender_id)
+            '''
             timer = Timer(2 * communication_radius / self.speed_of_sound)
-
             new_query_packet = QueryPacket(self.id, query_packet.source_id, query_packet.dpsn, self.hc)
             self.send_query_packet(new_query_packet, communication_radius, packet_size)
+            '''
             return ack_packet
         return None
     
@@ -107,29 +110,14 @@ class SensorNode:
 
         return optimal_node
     
-    def generate_and_send_data(self, packet_id, communication_radius, energy_threshold):
-        current_node = self
-        delay = 0
-        data_packet = DataPacket(packet_id, self.id, None, 50)
-        while not current_node.is_sink:
-            ack_packets = []
-            for neighbor in current_node.neighbors:
-                query_packet = QueryPacket(current_node.id, current_node.id, data_packet.packet_id, current_node.hc)
-                timer = Timer(2 * communication_radius / current_node.speed_of_sound)
-                ack_packet = neighbor.receive_query_packet(query_packet, communication_radius)
-                if ack_packet:
-                    ack_packets.append(ack_packet)
-            optimal_relay = current_node.select_optimal_relay(ack_packets, energy_threshold)
-            if optimal_relay:
-                next_node = next(n for n in current_node.neighbors if n.id == optimal_relay.sender_id)
-                delay += current_node.transmission_delay(data_packet.size) + current_node.propagation_delay(np.linalg.norm(current_node.position - next_node.position))
-                current_node.consume_energy('tx', data_packet.size)
-                next_node.consume_energy('rx', data_packet.size)
-                current_node = next_node
-            else:
-                print(f"No optimal relay found from node {current_node.id}")
-                break
-        return delay
+    def send_data_packet(self, data_packet, next_node):
+        self.consume_energy('tx', data_packet.size)
+        next_node.receive_data_packet(data_packet)
+
+    def receive_data_packet(self, data_packet):
+        self.consume_energy('rx', data_packet.size)
+
+    
     
 class Timer:
     def __init__(self, duration):
