@@ -98,23 +98,23 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
     # Broadcast GUIDEPacket to set up guiding network
     for sink in sinks:
         packet = GUIDEPacket(sink.gpsn, sink.hc)
-        packet_size = 32
-        updated_nodes = sink.broadcast_packet(packet, packet_size)
+        guide_packet_size = 32
+        updated_nodes = sink.broadcast_packet(packet, guide_packet_size)
 
         while updated_nodes:
             next_updated_nodes = []
             for node, new_packet in updated_nodes:
-                next_updated_nodes.extend(node.broadcast_packet(new_packet, packet_size))
+                next_updated_nodes.extend(node.broadcast_packet(new_packet, guide_packet_size))
                 for neighbor in node.neighbors:
                     if node.hc != neighbor.hc:
                         paths.append((node, neighbor))  # Lưu lại các đường đi
             updated_nodes = next_updated_nodes
 
-    for dpsn in range(num_rounds):
-        for source in sources:
+    for source in sources:
+        for dpsn in range(num_rounds):
             print(f'Round {dpsn} with source {source.id}')
-            packet_size = 32
-            for node in nodes:
+            signaling_packet_size = 32
+            for node in nodes + sinks:
                 node.memory_queue.clear()   
             
             current_node = source
@@ -123,7 +123,7 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
             while not current_node.is_sink:
                 ack_packets = []
                 query_packet = QueryPacket(current_node.id, current_node.id, dpsn, current_node.hc)
-                ack_packets = current_node.send_query_packet(query_packet, communication_radius, packet_size)
+                ack_packets = current_node.send_query_packet(query_packet, communication_radius, signaling_packet_size)
                 print(f'Node {current_node.id} received ack_packets: {[p.sender_id for p in ack_packets]}')
 
                 optimal_node = current_node.select_optimal_node(ack_packets, energy_threshold)
@@ -131,8 +131,9 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
                 if optimal_node:
                     print(f'Optimal node selected by {current_node.id}: {optimal_node.sender_id}')
                     next_node = next(n for n in current_node.neighbors if n.id == optimal_node.sender_id)
-                    data_packet = DataPacket(source.id, next_node.id, dpsn, 400)
-                    current_node.send_data_packet(data_packet, next_node)
+                    data_packet = DataPacket(source.id, next_node.id, dpsn, 4000)
+                    distance = np.linalg.norm(current_node.position - next_node.position)
+                    current_node.send_data_packet(data_packet, next_node, distance)
                     data_packet_paths.append(next_node)
                     optimal_paths.append((current_node, next_node))
                     current_node = next_node
