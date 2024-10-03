@@ -84,7 +84,7 @@ class SensorNode:
                 if ack_packet:
                     self.consume_energy_rx(packet_size) #node hiện tại nhận gói tin query
                     ack_packets.append(ack_packet)
-                    
+
         #timer.expire()
         return ack_packets
     
@@ -104,23 +104,35 @@ class SensorNode:
         optimal_node = None
         min_hc = min((ack_packet.hc for ack_packet in ack_packets if ack_packet), default=NINF)
         candidates = [ack_packet for ack_packet in ack_packets if ack_packet and ack_packet.hc == min_hc]
+        max_priority = NINF
 
         if candidates:
-            def compute_priority(packet):
+            #def compute_priority(packet):
+            for packet in candidates:
                 try:
                     next_node = next(n for n in self.neighbors if n.id == packet.sender_id)
                     distance = np.linalg.norm(self.position - next_node.position)
                     
                     if next_node.energy < energy_threshold:
                         print(f"Node {next_node.id} does not have enough energy. Skipping...")
-                        return NINF
+                        #return NINF
+                        continue
+                    else:
+                        energy_component = next_node.energy - energy_threshold
                     
-                    energy_component = max(0, packet.energy - energy_threshold)
-                    return energy_component / distance
+                    #energy_component = max(0, next_node.energy - energy_threshold)
+                    priority = energy_component / distance
+                    if priority > max_priority:
+                        max_priority = priority
+                        optimal_node = packet
+                    #return energy_component / distance
                 except StopIteration:
-                    return NINF
-            
-            optimal_node = max(candidates, key=compute_priority, default=None)
+                    #return NINF
+                    continue
+        if max_priority == NINF:
+            #print("Không tìm thấy node tối ưu vì tất cả đều có độ ưu tiên = -NINF.")
+            return None
+            #optimal_node = max(candidates, key=compute_priority, default=None)
 
         return optimal_node
     

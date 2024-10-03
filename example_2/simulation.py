@@ -62,6 +62,8 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
     average_delay = []
     average_residual_energy = []
     alive_nodes_count = []
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
 
     """
     for round in range(num_rounds):
@@ -114,6 +116,8 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
         for dpsn in range(num_rounds):
             print(f'Round {dpsn} with source {source.id}')
             signaling_packet_size = 32
+            
+            current_optimal_path = []
             for node in nodes + sinks:
                 node.memory_queue.clear()   
             
@@ -131,11 +135,12 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
                 if optimal_node:
                     print(f'Optimal node selected by {current_node.id}: {optimal_node.sender_id}')
                     next_node = next(n for n in current_node.neighbors if n.id == optimal_node.sender_id)
-                    data_packet = DataPacket(source.id, next_node.id, dpsn, 4000)
+                    data_packet = DataPacket(source.id, next_node.id, dpsn, 400)
                     distance = np.linalg.norm(current_node.position - next_node.position)
                     current_node.send_data_packet(data_packet, next_node, distance)
                     data_packet_paths.append(next_node)
-                    optimal_paths.append((current_node, next_node))
+                    current_optimal_path.append((current_node, next_node))
+
                     current_node = next_node
                     hop_count += 1
                 else:
@@ -144,6 +149,11 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
             
             print(f'Number of nodes from source to sink for {source.id}: {hop_count}')
             print(f'Data packet {dpsn} pass through nodes: {[node.id for node in data_packet_paths]}')
+
+            visualize_network(ax, nodes, sinks, sources, paths, current_optimal_path, dpsn, hop_count)
+            plt.pause(0.5)  
+
+            optimal_paths.append(current_optimal_path)
 
             
     for node in nodes:
@@ -158,9 +168,13 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
     return nodes, sinks, sources, paths, optimal_paths
 
 
-def visualize_network(nodes, sinks, sources, paths, optimal_paths):
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+def visualize_network(ax, nodes, sinks, sources, paths, optimal_path, dpsn, hop_count):    
+    #fig = plt.figure()
+    ax.cla()
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    #ax = fig.add_subplot(111, projection='3d')
 
     for node in nodes:
         ax.scatter(node.position[0], node.position[1], node.position[2], c='b', marker='o')
@@ -182,13 +196,14 @@ def visualize_network(nodes, sinks, sources, paths, optimal_paths):
         ax.plot([node.position[0], neighbor.position[0]], 
                 [node.position[1], neighbor.position[1]], 
                 [node.position[2], neighbor.position[2]], 'k-', lw=0.5)
-        
-    for path in optimal_paths:
-        node, next_node = path
+                
+    for node, next_node in optimal_path:
         ax.plot([node.position[0], next_node.position[0]], [node.position[1], next_node.position[1]], [node.position[2], next_node.position[2]], 'r-', lw=2)
 
+    ax.text2D(0.05, 0.95, f'Packet ID: {dpsn}\nHop Count: {hop_count}', transform=ax.transAxes, fontsize=12, color='blue')
 
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-    plt.show()
+    #ax.set_xlabel('X')
+    #ax.set_ylabel('Y')
+    #ax.set_zlabel('Z')
+    #plt.show()
+    plt.draw()
