@@ -62,6 +62,7 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
     average_delay = []
     average_residual_energy = []
     alive_nodes_count = []
+    successful_deliveries = 0
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
@@ -127,8 +128,12 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
             while not current_node.is_sink:
                 ack_packets = []
                 query_packet = QueryPacket(current_node.id, current_node.id, dpsn, current_node.hc)
-                ack_packets = current_node.send_query_packet(query_packet, communication_radius, signaling_packet_size)
-                print(f'Node {current_node.id} received ack_packets: {[p.sender_id for p in ack_packets]}')
+                if current_node.energy > energy_threshold:
+                    ack_packets = current_node.send_query_packet(query_packet, communication_radius, signaling_packet_size)
+                    print(f'Node {current_node.id} received ack_packets: {[p.sender_id for p in ack_packets]}')
+                else:
+                    print(f'Node {current_node.id} does not have enough energy')
+                    break
 
                 optimal_node = current_node.select_optimal_node(ack_packets, energy_threshold)
 
@@ -146,16 +151,25 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
                 else:
                     print(f'No optimal node found from node {current_node.id}')
                     break
+                
+            def is_packet_delivered_to_sink(data_packet_paths, sinks):
+                return data_packet_paths[-1] in sinks
+
+            if is_packet_delivered_to_sink(data_packet_paths, sinks):
+                successful_deliveries += 1
             
             print(f'Number of nodes from source to sink for {source.id}: {hop_count}')
             print(f'Data packet {dpsn} pass through nodes: {[node.id for node in data_packet_paths]}')
 
-            visualize_network(ax, nodes, sinks, sources, paths, current_optimal_path, dpsn, hop_count)
-            plt.pause(0.5)  
+            visualize_path_DataPacket(ax, nodes, sinks, sources, paths, current_optimal_path, dpsn, hop_count) 
 
             optimal_paths.append(current_optimal_path)
 
-            
+    total_energy = sum(node.energy for node in nodes)
+    average_residual_energy.append(total_energy / num_nodes)  # Năng lượng trung bình còn lại
+    alive_nodes = sum(1 for node in nodes if node.energy > energy_threshold)  # Số lượng nút còn sống
+    alive_nodes_count.append(alive_nodes)
+
     for node in nodes:
         print(f'Node ID: {node.id}, Position: {node.position}, HC: {node.hc}, Energy: {node.energy}, GPSN: {node.gpsn}')
     
@@ -165,16 +179,17 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
     for source in sources:
         print(f'Source ID: {source.id}, Position: {source.position}, HC: {source.hc}, Energy: {source.energy}, GPSN: {source.gpsn}')
     
+    print(f'Avg Residual Energy = {average_residual_energy[-1]:.2f} J, Alive Nodes = {alive_nodes}, Success Data Packet = {successful_deliveries}')
+
     return nodes, sinks, sources, paths, optimal_paths
 
 
-def visualize_network(ax, nodes, sinks, sources, paths, optimal_path, dpsn, hop_count):    
-    #fig = plt.figure()
+def visualize_path_DataPacket(ax, nodes, sinks, sources, paths, optimal_path, dpsn, hop_count): 
     ax.cla()
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
-    #ax = fig.add_subplot(111, projection='3d')
+    ax.set_title("Path of Data Packet")
 
     for node in nodes:
         ax.scatter(node.position[0], node.position[1], node.position[2], c='b', marker='o')
@@ -200,10 +215,43 @@ def visualize_network(ax, nodes, sinks, sources, paths, optimal_path, dpsn, hop_
     for node, next_node in optimal_path:
         ax.plot([node.position[0], next_node.position[0]], [node.position[1], next_node.position[1]], [node.position[2], next_node.position[2]], 'r-', lw=2)
 
-    ax.text2D(0.05, 0.95, f'Packet ID: {dpsn}\nHop Count: {hop_count}', transform=ax.transAxes, fontsize=12, color='blue')
+    ax.text2D(0.05, 0.95, f'Packet ID: {dpsn}\nHop Count: {hop_count}', transform=ax.transAxes, fontsize=10, color='blue')
 
-    #ax.set_xlabel('X')
-    #ax.set_ylabel('Y')
-    #ax.set_zlabel('Z')
-    #plt.show()
     plt.draw()
+    plt.pause(0.5)  
+
+def visualize_network(nodes, sinks, sources, paths, optimal_paths):    
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    for node in nodes:
+        ax.scatter(node.position[0], node.position[1], node.position[2], c='b', marker='o')
+        ax.text(node.position[0], node.position[1], node.position[2], f'{node.hc}', color='blue')
+        for neighbor in node.neighbors:
+            if node.hc != neighbor.hc:
+                ax.plot([node.position[0], neighbor.position[0]], [node.position[1], neighbor.position[1]], [node.position[2], neighbor.position[2]], 'g-', lw=0.5)
+
+    for sink in sinks:
+        ax.scatter(sink.position[0], sink.position[1], sink.position[2], c='r', marker='^')
+        ax.text(sink.position[0], sink.position[1], sink.position[2], '0', color='red')  # Sink hop count is always 0
+
+    for source in sources:
+        ax.scatter(source.position[0], source.position[1], source.position[2], c='g', marker='^')
+        ax.text(source.position[0], source.position[1], source.position[2], f'{source.hc}', color='green')
+
+    for path in paths:
+        node, neighbor = path
+        ax.plot([node.position[0], neighbor.position[0]], 
+                [node.position[1], neighbor.position[1]], 
+                [node.position[2], neighbor.position[2]], 'k-', lw=0.5)
+
+    for path in optimal_paths:            
+        for node, next_node in path:
+            ax.plot([node.position[0], next_node.position[0]], [node.position[1], next_node.position[1]], [node.position[2], next_node.position[2]], 'r-', lw=2)
+
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    ax.set_title('Network Visualization')
+    plt.show()
+   
