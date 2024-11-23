@@ -1,5 +1,9 @@
 import random
+import numpy as np
 from GA_EEGNBR.src.sensor import distance
+
+random.seed(42)
+np.random.seed(42)
 
 #Hàm kiểm tra xem đường đi có thỏa mãn không
 def is_valid_path(path, sinks):
@@ -10,11 +14,12 @@ def is_valid_path(path, sinks):
 #Hàm sắp xếp các node sink theo thức tự gần node nguồn nhất
 def sorted_sinks_by_distance(source_node, sinks):
     sorted_sinks = sorted(sinks, key=lambda sink: distance(source_node, sink))
+    return sorted_sinks
 
 #Hàm khởi tạo đường ngẫu nhiên cho quần thể
 def create_random_path(all_nodes, source_node, sources, sinks, radius, max_attempts = 100):
     for _ in range(max_attempts):
-        path = []
+        path = [source_node]
         current_node = source_node
         while current_node not in sinks:
             next_node = [node for node in all_nodes if node not in path and node not in sources and distance(current_node, node) < radius]
@@ -23,7 +28,7 @@ def create_random_path(all_nodes, source_node, sources, sinks, radius, max_attem
 
             sink_in_next_node = [node for node in next_node if node in sinks]
             if sink_in_next_node:
-                current_node = sink_in_next_node
+                current_node = random.choice(sink_in_next_node)
             else:
                 current_node = random.choice(next_node)
 

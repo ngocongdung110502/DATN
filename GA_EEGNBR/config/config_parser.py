@@ -1,4 +1,4 @@
 from configparser import ConfigParser
 
 parser = ConfigParser()
-parser.read('/config/config.ini')
+parser.read('D:\Source Code Lab\EEGNBR\GA_EEGNBR\config\config.ini')

@@ -1,8 +1,6 @@
 from GA_EEGNBR.config.config_parser import parser
 from GA_EEGNBR.src.sensor import distance
 
-from FinalProgram.main import paths
-
 
 def transmit_data(path, source_id, packet_id):
     trans_parameter = parser['Transmit Data']
