@@ -11,10 +11,12 @@ from GA_EEGNBR.utils.init_population import is_valid_path
 def genetic_algorithm(population, all_nodes, sinks, sources, num_generation, population_size, mutation_rate, radius):
     best_paths = []
 
+    '''
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     plt.ion()
     plot_nodes(ax, all_nodes)
+    '''
 
     for generation in range(num_generation):
         population = sorted(population, key = fitness, reverse=True)
@@ -23,16 +25,20 @@ def genetic_algorithm(population, all_nodes, sinks, sources, num_generation, pop
         total_distance = sum(distance(best_path[i], best_path[i+1]) for i in range(len(best_path) - 1))
         print(f"Generation {generation + 1}: Best Path Distance = {total_distance}")
 
+        '''
         ax.clear()
         plot_nodes(ax, all_nodes)
         plot_best_path_generation(ax, best_path, generation)
         plt.pause(0.1)
+        '''
 
         new_population = population[:int(0.05 * population_size)]
         while len(new_population) < population_size:
             parent1, parent2 = random.choice(population[:10]), random.choice(population[:10])
 
             child1, child2 = two_point_crossover(parent1, parent2)
+            #child1, child2 = crossover(parent1, parent2)
+
 
             child1 = mutate(child1, mutation_rate, all_nodes, sources, sinks, radius)
             child2 = mutate(child2, mutation_rate, all_nodes, sources, sinks, radius)
@@ -44,10 +50,10 @@ def genetic_algorithm(population, all_nodes, sinks, sources, num_generation, pop
 
         population = new_population
 
-    plt.ioff()
-    plt.show()
+    #plt.ioff()
+    #plt.show()
 
-    best_path = sorted(population, key=fitness, reverse=True)
+    best_path = sorted(population, key=fitness, reverse=True)[0]
     return best_path
 
 
@@ -65,7 +71,6 @@ def remove_duplicates(path):
         if node not in seen:
             new_path.append(node)
             seen.add(node)
-
     return new_path
 
 #Hàm lai ghép
@@ -74,27 +79,30 @@ def crossover(path1, path2):
         print(f"Parent is None")
 
     split_point = random.randint(1, min(len(path1), len(path2)) - 2)
-    new_path = path1[:split_point] + path2[split_point:]
+    child1 = path1[:split_point] + path2[split_point:]
+    child2 = path2[:split_point] + path1[split_point:]
 
-    return remove_duplicates(new_path)
+    return remove_duplicates(child1), remove_duplicates(child2)
 
 #Hàm lại ghép cắt 2 điểm
 def two_point_crossover(parent1, parent2):
     if parent1 is None or parent2 is None:
         return None, None
+
     size = min(len(parent1), len(parent2))
     point1 = random.randint(1, size - 3)
     point2 = random.randint(point1 + 1, size - 2)
     child1 = parent1[:point1] + parent2[point1:point2] + parent1[point2:]
     child2 = parent2[:point1] + parent1[point1:point2] + parent2[point2:]
+
     return remove_duplicates(child1), remove_duplicates(child2)
 
 #Hàm đột biến
 def mutate(path, mutation_rate, all_nodes, sources, sinks, radius):
     if random.random() < mutation_rate:
-        index = random.randint(1, len(path) - 1)
-        valid_nodes = [node for node in all_nodes if
-                       node not in path and node not in sources]  # and distance(path[index-1], node) < radius]
+        index = random.randint(1, len(path) - 2)
+        #Cần kiểm tra xem trong các node đột biến có khoảng các với path[index+1] có thỏa mãn ràng buộc không nữa
+        valid_nodes = [node for node in all_nodes if node not in path and node not in sources and distance(path[index-1], node) < radius and distance(path[index+1], node) < radius]
         # new_node = random.choice([node for node in all_nodes if node not in path and node not in sources and distance(path[index-1], node) < radius ])
 
         if valid_nodes:

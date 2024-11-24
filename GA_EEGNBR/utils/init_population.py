@@ -2,8 +2,8 @@ import random
 import numpy as np
 from GA_EEGNBR.src.sensor import distance
 
-random.seed(42)
-np.random.seed(42)
+#random.seed(42)
+#np.random.seed(42)
 
 #Hàm kiểm tra xem đường đi có thỏa mãn không
 def is_valid_path(path, sinks):
@@ -41,8 +41,9 @@ def create_random_path(all_nodes, source_node, sources, sinks, radius, max_attem
 
 #Hàm khỏi tạo quần thể ban đầu
 def initialize_population(all_nodes, sources, sinks, radius, population_size):
-    population = []
+    populations = []
     for source_node in sources:
+        population = []
         sorted_sinks = sorted_sinks_by_distance(source_node, sinks)
         closet_sinks = sorted_sinks[:2]
         for _ in range(population_size):
@@ -51,5 +52,6 @@ def initialize_population(all_nodes, sources, sinks, radius, population_size):
                 if is_valid_path(path, sinks) and path not in population:
                     population.append(path)
                     break
+        populations.append(population)
 
-    return population
+    return populations
