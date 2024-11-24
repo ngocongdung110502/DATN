@@ -7,7 +7,7 @@ from GA_EEGNBR.src.sensor import distance
 space_dim = int(parser['Sensor']['space_dim'])
 depth_range = int(parser['Sensor']['depth_range'])
 num_sinks = int(parser['Sensor']['num_sinks'])
-num_sources = int(parser['Sensor']['num_sources'])
+num_sources = int(parser['Sensor']['num_sources']) 
 num_nodes = int(parser['Sensor']['num_nodes'])
 radius = int(parser['Constraints']['radius'])
 
