@@ -3,7 +3,7 @@ from simulation import simulate_guiding_network, visualize_network
 
 
 NUM_NODES = 200
-NUM_SINKS = 1
+NUM_SINKS = 5
 NUM_SOURCE_NODE = 1
 SPACE_DIM = 500
 DEPTH_LAYERS = 10

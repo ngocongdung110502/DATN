@@ -1,8 +1,8 @@
 import random
 import numpy as np
 
-#random.seed(42)
-#np.random.seed(42)
+random.seed(42)
+np.random.seed(42)
 
 #Định nghĩa các cảm biến sensor, sink và source
 class Node:

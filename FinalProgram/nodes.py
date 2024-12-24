@@ -29,7 +29,7 @@ class SensorNode:
         return distance / self.speed_of_sound
 
     def consume_energy_tx(self, packet_size, distance):
-        self.energy -= self.tx_power * (self.transmission_delay(packet_size) + distance / self.speed_of_sound)
+        self.energy -= self.tx_power * (self.transmission_delay(packet_size))
 
     def consume_energy_rx(self, packet_size):
         self.energy -= self.rx_power * (self.transmission_delay(packet_size))

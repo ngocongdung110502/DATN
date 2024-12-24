@@ -7,6 +7,7 @@ from packet import GuidePacket, QueryPacket, DataPacket
 
 NINF = float('-inf')
 
+'''
 def initialize_nodes(num_nodes, num_sinks, num_source_node, space_dim, depth_layers, depth_range):
     nodes = []
     sinks = []
@@ -46,8 +47,8 @@ def initialize_nodes(num_nodes, num_sinks, num_source_node, space_dim, depth_lay
         sources.append(source)
 
     return nodes, sinks, sources
-
 '''
+
 def initialize_nodes(num_nodes, num_sinks, num_source_nodes, space_dim, depth_range):
     nodes = []
     sinks = []
@@ -56,13 +57,11 @@ def initialize_nodes(num_nodes, num_sinks, num_source_nodes, space_dim, depth_ra
     for i in range(num_nodes):
         position = np.random.rand(3) * space_dim
         position[2] = np.random.uniform(0, space_dim) * -1
-
         nodes.append(SensorNode(f'Node_{i}', position))
 
     for i in range(num_sinks):
         position = np.random.rand(3) * space_dim
         position[2] = 0
-
         sink = SensorNode(f'Sink_{i}', position)
         sink.gpsn = 1
         sink.hc = 0
@@ -75,7 +74,7 @@ def initialize_nodes(num_nodes, num_sinks, num_source_nodes, space_dim, depth_ra
         sources.append(source)
 
     return nodes, sinks, sources
-'''
+
 def calculate_neighbors(nodes, sinks, sources, communication_radius):
     all_nodes = nodes + sinks + sources
     for node in all_nodes:
@@ -84,8 +83,8 @@ def calculate_neighbors(nodes, sinks, sources, communication_radius):
 
 
 def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, depth_layers, depth_range, communication_radius, num_rounds, energy_threshold):
-    nodes, sinks, sources = initialize_nodes(num_nodes, num_sinks, num_source_node, space_dim, depth_layers, depth_range)
-    #nodes, sinks, sources = initialize_nodes(num_nodes, num_sinks, num_source_node, space_dim, depth_range)
+    #nodes, sinks, sources = initialize_nodes(num_nodes, num_sinks, num_source_node, space_dim, depth_layers, depth_range)
+    nodes, sinks, sources = initialize_nodes(num_nodes, num_sinks, num_source_node, space_dim, depth_range)
     calculate_neighbors(nodes, sinks, sources, communication_radius)
 
     paths = []
@@ -95,8 +94,8 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
     average_residual_energy = []
     alive_nodes_count = []
     successful_deliveries = 0
-    #fig = plt.figure()
-    #ax = fig.add_subplot(111, projection='3d')
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
 
     # Broadcast GUIDEPacket to set up guiding network
     for sink in sinks:
@@ -160,8 +159,8 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
 
             print(f'Number of nodes from source to sink for {source.id}: {hop_count}')
             print(f'Data packet {dpsn} pass through nodes: {[node.id for node in data_packet_paths]}')
-
-            # visualize_path_DataPacket(ax, nodes, sinks, sources, paths, current_optimal_path, dpsn, hop_count)
+            print(f'Hop count of node pass through: {[node.hc for node in data_packet_paths]}')
+            visualize_path_DataPacket(ax, nodes, sinks, sources, paths, current_optimal_path, dpsn, hop_count)
 
             optimal_paths.append(current_optimal_path)
 
@@ -196,10 +195,12 @@ def visualize_path_DataPacket(ax, nodes, sinks, sources, paths, optimal_path, dp
     for node in nodes:
         ax.scatter(node.position[0], node.position[1], node.position[2], c='b', marker='o')
         ax.text(node.position[0], node.position[1], node.position[2], f'{node.hc}', color='blue')
+        '''
         for neighbor in node.neighbors:
             if node.hc != neighbor.hc:
                 ax.plot([node.position[0], neighbor.position[0]], [node.position[1], neighbor.position[1]],
                         [node.position[2], neighbor.position[2]], 'g-', lw=0.5)
+        '''
 
     for sink in sinks:
         ax.scatter(sink.position[0], sink.position[1], sink.position[2], c='r', marker='^')
@@ -208,12 +209,13 @@ def visualize_path_DataPacket(ax, nodes, sinks, sources, paths, optimal_path, dp
     for source in sources:
         ax.scatter(source.position[0], source.position[1], source.position[2], c='g', marker='s')
         ax.text(source.position[0], source.position[1], source.position[2], f'{source.hc}', color='green')
-
+    '''
     for path in paths:
         node, neighbor = path
         ax.plot([node.position[0], neighbor.position[0]],
                 [node.position[1], neighbor.position[1]],
                 [node.position[2], neighbor.position[2]], 'k-', lw=0.5)
+    '''
 
     for node, next_node in optimal_path:
         ax.plot([node.position[0], next_node.position[0]], [node.position[1], next_node.position[1]],
@@ -232,10 +234,12 @@ def visualize_network(nodes, sinks, sources, paths, optimal_paths):
     for node in nodes:
         ax.scatter(node.position[0], node.position[1], node.position[2], c='b', marker='o')
         ax.text(node.position[0], node.position[1], node.position[2], f'{node.hc}', color='blue')
+        '''
         for neighbor in node.neighbors:
             if node.hc != neighbor.hc:
                 ax.plot([node.position[0], neighbor.position[0]], [node.position[1], neighbor.position[1]],
                         [node.position[2], neighbor.position[2]], 'g-', lw=0.5)
+        '''
 
     for sink in sinks:
         ax.scatter(sink.position[0], sink.position[1], sink.position[2], c='r', marker='^')
@@ -245,11 +249,13 @@ def visualize_network(nodes, sinks, sources, paths, optimal_paths):
         ax.scatter(source.position[0], source.position[1], source.position[2], c='g', marker='^')
         ax.text(source.position[0], source.position[1], source.position[2], f'{source.hc}', color='green')
 
+    '''
     for path in paths:
         node, neighbor = path
         ax.plot([node.position[0], neighbor.position[0]],
                 [node.position[1], neighbor.position[1]],
                 [node.position[2], neighbor.position[2]], 'k-', lw=0.5)
+    '''
 
     for path in optimal_paths:
         for node, next_node in path:

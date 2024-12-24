@@ -2,13 +2,13 @@ import random
 import numpy as np
 from GA_EEGNBR.src.sensor import distance
 
-#random.seed(42)
-#np.random.seed(42)
+random.seed(42)
+np.random.seed(42)
 
 #Hàm kiểm tra xem đường đi có thỏa mãn không
 def is_valid_path(path, sinks):
-    if path is None:
-        return False
+    #if path is None:
+        #return False
     return path[-1] in sinks
 
 #Hàm sắp xếp các node sink theo thức tự gần node nguồn nhất

@@ -32,12 +32,13 @@ def genetic_algorithm(population, all_nodes, sinks, sources, num_generation, pop
         plt.pause(0.1)
         '''
 
+        '''
         new_population = population[:int(0.05 * population_size)]
         while len(new_population) < population_size:
-            parent1, parent2 = random.choice(population[:10]), random.choice(population[:10])
+            parent1, parent2 = random.choice(population[:50]), random.choice(population[:50])
 
-            child1, child2 = two_point_crossover(parent1, parent2)
-            #child1, child2 = crossover(parent1, parent2)
+            #child1, child2 = two_point_crossover(parent1, parent2)
+            child1, child2 = crossover(parent1, parent2)
 
 
             child1 = mutate(child1, mutation_rate, all_nodes, sources, sinks, radius)
@@ -49,6 +50,28 @@ def genetic_algorithm(population, all_nodes, sinks, sources, num_generation, pop
                 new_population.append(child2)
 
         population = new_population
+        '''
+
+        new_population = []
+        for i in range(population_size//2):
+            #parent1, parent2 = random.choice(population[:50]), random.choice(population[:50])
+            parent1, parent2 = random.sample(population, 2)
+
+            child1, child2 = crossover(parent1, parent2)
+            new_population.append(child1)
+            new_population.append(child2)
+
+        muta = random.sample(new_population, int(mutation_rate*population_size))
+        for i in muta:
+            mutate(i, mutation_rate, all_nodes, sources, sinks, radius)
+
+        population = population + new_population
+        population = sorted(population, key = fitness, reverse=True)
+        _population_size = 2 * population_size
+        t2 = int(population_size * 2 / 5)
+        t3 = int(population_size / 5)
+        t1 = population_size - t2 - t3
+        population = population[:t1] + population[_population_size//3:_population_size//3+t2] + population[-t3:]
 
     #plt.ioff()
     #plt.show()
@@ -99,14 +122,14 @@ def two_point_crossover(parent1, parent2):
 
 #Hàm đột biến
 def mutate(path, mutation_rate, all_nodes, sources, sinks, radius):
-    if random.random() < mutation_rate:
-        index = random.randint(1, len(path) - 2)
-        #Cần kiểm tra xem trong các node đột biến có khoảng các với path[index+1] có thỏa mãn ràng buộc không nữa
-        valid_nodes = [node for node in all_nodes if node not in path and node not in sources and distance(path[index-1], node) < radius and distance(path[index+1], node) < radius]
-        # new_node = random.choice([node for node in all_nodes if node not in path and node not in sources and distance(path[index-1], node) < radius ])
+    index = random.randint(1, len(path) - 2)
+    #Cần kiểm tra xem trong các node đột biến có khoảng các với path[index+1] có thỏa mãn ràng buộc không nữa
+    valid_nodes = [node for node in all_nodes if node not in sources and distance(path[index-1], node) < radius and distance(path[index+1], node) < radius]
+    # new_node = random.choice([node for node in all_nodes if node not in path and node not in sources and distance(path[index-1], node) < radius ])
 
-        if valid_nodes:
-            new_node = random.choice(valid_nodes)
-            path[index] = new_node
+    if valid_nodes:
+        new_node = random.choice(valid_nodes)
+        path[index] = new_node
     return remove_duplicates(path)
+
 

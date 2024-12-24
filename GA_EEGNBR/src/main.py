@@ -26,11 +26,16 @@ for node in all_nodes:
 
 populations = initialize_population(all_nodes, sources, sinks, radius, population_size)
 for population in populations:
-    for i in range(1, 101):
+    #for i in range(1, 101):
         best_path = genetic_algorithm(population, all_nodes, sinks, sources, num_generations, population_size, mutation_rate, radius)
         total_distance = sum(distance(best_path[i], best_path[i+1]) for i in range(len(best_path) - 1))
         print(f"Best path: {[node.node_id for node in best_path]}")
         print(f"Total distance of best path: {total_distance}")
+
+        print("\nDistances between nodes in best path:")
+        for j in range(len(best_path) - 1):
+            d = distance(best_path[j], best_path[j + 1])
+            print(f"  Node {best_path[j].node_id} -> Node {best_path[j + 1].node_id}: {d:.2f}")
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
