@@ -195,12 +195,10 @@ def visualize_path_DataPacket(ax, nodes, sinks, sources, paths, optimal_path, dp
     for node in nodes:
         ax.scatter(node.position[0], node.position[1], node.position[2], c='b', marker='o')
         ax.text(node.position[0], node.position[1], node.position[2], f'{node.hc}', color='blue')
-        '''
         for neighbor in node.neighbors:
             if node.hc != neighbor.hc:
                 ax.plot([node.position[0], neighbor.position[0]], [node.position[1], neighbor.position[1]],
-                        [node.position[2], neighbor.position[2]], 'g-', lw=0.5)
-        '''
+                        [node.position[2], neighbor.position[2]], 'g-', lw=1)
 
     for sink in sinks:
         ax.scatter(sink.position[0], sink.position[1], sink.position[2], c='r', marker='^')
@@ -209,12 +207,13 @@ def visualize_path_DataPacket(ax, nodes, sinks, sources, paths, optimal_path, dp
     for source in sources:
         ax.scatter(source.position[0], source.position[1], source.position[2], c='g', marker='s')
         ax.text(source.position[0], source.position[1], source.position[2], f'{source.hc}', color='green')
+
     '''
     for path in paths:
         node, neighbor = path
         ax.plot([node.position[0], neighbor.position[0]],
                 [node.position[1], neighbor.position[1]],
-                [node.position[2], neighbor.position[2]], 'k-', lw=0.5)
+                [node.position[2], neighbor.position[2]], 'g-', lw=1)
     '''
 
     for node, next_node in optimal_path:
@@ -234,12 +233,11 @@ def visualize_network(nodes, sinks, sources, paths, optimal_paths):
     for node in nodes:
         ax.scatter(node.position[0], node.position[1], node.position[2], c='b', marker='o')
         ax.text(node.position[0], node.position[1], node.position[2], f'{node.hc}', color='blue')
-        '''
+
         for neighbor in node.neighbors:
             if node.hc != neighbor.hc:
                 ax.plot([node.position[0], neighbor.position[0]], [node.position[1], neighbor.position[1]],
-                        [node.position[2], neighbor.position[2]], 'g-', lw=0.5)
-        '''
+                        [node.position[2], neighbor.position[2]], 'g-', lw=1)
 
     for sink in sinks:
         ax.scatter(sink.position[0], sink.position[1], sink.position[2], c='r', marker='^')
@@ -254,7 +252,7 @@ def visualize_network(nodes, sinks, sources, paths, optimal_paths):
         node, neighbor = path
         ax.plot([node.position[0], neighbor.position[0]],
                 [node.position[1], neighbor.position[1]],
-                [node.position[2], neighbor.position[2]], 'k-', lw=0.5)
+                [node.position[2], neighbor.position[2]], 'g-', lw=1)
     '''
 
     for path in optimal_paths:
