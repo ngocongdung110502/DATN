@@ -11,8 +11,7 @@ def transmit_data(path, source_id, packet_id):
 
         distance_between_node = distance(transmitter, receiver)
         processing_time = int(trans_parameter['data_size']) / int(trans_parameter['bit_rate'])
-        transmission_time = distance_between_node / int(trans_parameter['speed_in_water'])
-        total_transmission_time = processing_time + transmission_time
+        total_transmission_time = processing_time
 
         energy_consumed_transmitter = total_transmission_time * float(trans_parameter['transmission_power'])
         energy_consumed_receiver = processing_time * float(trans_parameter['receiver_power'])

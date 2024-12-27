@@ -7,9 +7,11 @@ def plot_nodes(ax, all_nodes):
         if node.is_sink:
             ax.scatter(node.position[0], node.position[1], node.position[2], c='r', marker='o',
                        label='Sink' if node.node_id == "Si1" else "")
+            ax.text(node.position[0], node.position[1], node.position[2], f'{node.node_id}', color='red')
         if node.is_source:
             ax.scatter(node.position[0], node.position[1], node.position[2], c='b', marker='^',
                        label='Source' if node.node_id == "So1" else "")
+            ax.text(node.position[0], node.position[1], node.position[2], f'{node.node_id}', color='green')
         if not node.is_sink and not node.is_source:
             ax.scatter(node.position[0], node.position[1], node.position[2], c='g', marker='o',
                        label='Sensor' if node.node_id == "N1" else "")
