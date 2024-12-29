@@ -3,7 +3,6 @@ import random
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from GA_EEGNBR.src.main import all_nodes
 from nodes import SensorNode
 from packet import GuidePacket, QueryPacket, DataPacket
 
