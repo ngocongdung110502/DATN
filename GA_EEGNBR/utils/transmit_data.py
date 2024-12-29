@@ -1,19 +1,17 @@
-from GA_EEGNBR.config.config_parser import parser
-from GA_EEGNBR.src.sensor import distance
+from time import process_time
 
+from GA_EEGNBR.config.config_parser import parser
+
+trans_parameter = parser['Transmit Data']
 
 def transmit_data(path, source_id, packet_id):
-    trans_parameter = parser['Transmit Data']
-
     for i in range(len(path) - 1):
         transmitter = path[i]
         receiver = path[i+1]
 
-        distance_between_node = distance(transmitter, receiver)
         processing_time = int(trans_parameter['data_size']) / int(trans_parameter['bit_rate'])
-        total_transmission_time = processing_time
 
-        energy_consumed_transmitter = total_transmission_time * float(trans_parameter['transmission_power'])
+        energy_consumed_transmitter = processing_time * float(trans_parameter['transmission_power'])
         energy_consumed_receiver = processing_time * float(trans_parameter['receiver_power'])
 
         transmitter.energy -= energy_consumed_transmitter

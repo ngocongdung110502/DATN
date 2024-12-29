@@ -1,5 +1,6 @@
 import random
 import numpy as np
+
 from GA_EEGNBR.src.sensor import distance, GuidePacket
 from GA_EEGNBR.utils.plot import plot_best_path, plot_nodes
 import matplotlib.pyplot as plt
@@ -9,13 +10,16 @@ random.seed(42)
 np.random.seed(42)
 
 #Hàm kiểm tra xem đường đi có thỏa mãn không
-def is_valid_path(path, sinks, radius):
+def is_valid_path(path, sinks, radius, energy_threshold=0.5):
     if path is None or path[-1] not in sinks:
         return False
 
     for i in range(len(path)-1):
-            if distance(path[i], path[i+1]) > radius:
-                return False
+        if distance(path[i], path[i+1]) > radius:
+            return False
+    for i in range(len(path)):
+        if path[i].energy > energy_threshold:
+            return True
 
     return True
 
@@ -24,16 +28,16 @@ def sorted_sinks_by_distance(source_node, sinks):
     sorted_sinks = sorted(sinks, key=lambda sink: distance(source_node, sink))
     return sorted_sinks
 
-def setup_network(sinks):
+def setup_network(sinks, guide_packet_size):
     paths = []
     for sink in sinks:
         packet = GuidePacket(sink.gpsn, sink.hc)
-        updated_nodes = sink.broadcast_packet(packet)
+        updated_nodes = sink.broadcast_packet(packet, guide_packet_size)
 
         while updated_nodes:
             next_updated_nodes = []
             for node, new_packet in updated_nodes:
-                next_updated_nodes.extend(node.broadcast_packet(new_packet))
+                next_updated_nodes.extend(node.broadcast_packet(new_packet, guide_packet_size))
                 for neighbor in node.neighbors:
                     if node.hc != neighbor.hc:
                         paths.append((node, neighbor))  # Lưu lại các đường đi

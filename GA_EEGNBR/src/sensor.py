@@ -1,10 +1,13 @@
 import random
 import numpy as np
+from GA_EEGNBR.config.config_parser import parser
 
 random.seed(42)
 np.random.seed(42)
 
 NINF = float('-inf')
+
+trans_parameter = parser['Transmit Data']
 
 #Định nghĩa các cảm biến sensor, sink và source
 class Node:
@@ -16,12 +19,21 @@ class Node:
         self.neighbors = []
         self.is_sink = is_sink
         self.is_source = is_source
-        self.energy = random.randint(25, 30)
+        self.energy = 30
 
     def __repr__(self):
         return f"Node(ID={self.node_id}, Position={self.position}, Hop-count={self.hc}, IsSink={self.is_sink}, IsSource={self.is_source})"
 
-    def update_with_packet(self, packet):
+    def consume_energy_tx(self, packet_size):
+        self.energy -= float(trans_parameter['transmission_power']) * (packet_size / int(trans_parameter['bit_rate']))
+
+    def consume_energy_rx(self, packet_size):
+        self.energy -= float(trans_parameter['receiver_power']) * (packet_size / int(trans_parameter['bit_rate']))
+
+    # function define update guiding network
+    def update_with_packet(self, packet, packet_size):
+        self.consume_energy_rx(packet_size)  # consume energy for reception
+
         if packet.gpsn > self.gpsn:
             self.gpsn = packet.gpsn
             self.hc = packet.hc + 1
@@ -32,11 +44,13 @@ class Node:
         return False
 
     # broadcast guide packet for neighbor nodes
-    def broadcast_packet(self, packet):
+    def broadcast_packet(self, packet, packet_size):
         updated_nodes = []
 
         for neighbor in self.neighbors:
-            if neighbor.update_with_packet(packet):
+            if neighbor.update_with_packet(packet, packet_size):
+                self.consume_energy_tx(packet_size)
+
                 new_packet = GuidePacket(packet.gpsn, neighbor.hc)
                 updated_nodes.append((neighbor, new_packet))
         return updated_nodes

@@ -2,6 +2,8 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+
+from GA_EEGNBR.src.main import all_nodes
 from nodes import SensorNode
 from packet import GuidePacket, QueryPacket, DataPacket
 
@@ -165,7 +167,7 @@ def simulate_guiding_network(num_nodes, num_sinks, num_source_node, space_dim, d
             optimal_paths.append(current_optimal_path)
 
     total_energy = sum(node.energy for node in nodes)
-    average_residual_energy.append(total_energy / num_nodes)  # Năng lượng trung bình còn lại
+    average_residual_energy.append(total_energy / (num_nodes+num_sinks+num_source_node))  # Năng lượng trung bình còn lại
     alive_nodes = sum(1 for node in nodes if node.energy > energy_threshold)  # Số lượng nút còn sống
     alive_nodes_count.append(alive_nodes)
 

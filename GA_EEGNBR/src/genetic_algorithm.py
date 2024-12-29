@@ -22,7 +22,7 @@ def genetic_algorithm(population, all_nodes, sinks, sources, num_generation, pop
         population = sorted(population, key = fitness, reverse=True)
         best_path = population[0]
         best_paths.append(best_path)
-        #total_distance = sum(distance(best_path[i], best_path[i+1]) for i in range(len(best_path) - 1))
+        total_distance = sum(distance(best_path[i], best_path[i+1]) for i in range(len(best_path) - 1))
         #print(f"Generation {generation + 1}: Best Path Distance = {total_distance}")
 
         '''
@@ -32,7 +32,7 @@ def genetic_algorithm(population, all_nodes, sinks, sources, num_generation, pop
         plt.pause(0.1)
         '''
 
-        new_population = population[:int(0.2 * population_size)]
+        new_population = population[:int(0.3 * population_size)]
         while len(new_population) < population_size:
             parent1, parent2 = random.choice(population[:15]), random.choice(population[:15])
 
@@ -147,9 +147,10 @@ def two_point_crossover(parent1, parent2):
 def mutate(path, mutation_rate, all_nodes, sources, sinks, radius):
     index = random.randint(1, len(path) - 1)
     current_node = path[index]
+    previous_node = path[index-1]
     #Cần kiểm tra xem trong các node đột biến có khoảng các với path[index+1] có thỏa mãn ràng buộc không nữa
     #valid_nodes = [node for node in all_nodes if node not in path and node not in sources and distance(path[index-1], node) <= radius and distance(path[index+1], node) <= radius]
-    valid_nodes = [node for node in path[index-1].neighbors if node != current_node and node.hc == current_node.hc]
+    valid_nodes = [node for node in previous_node.neighbors if node != current_node and node.hc == current_node.hc]
     # new_node = random.choice([node for node in all_nodes if node not in path and node not in sources and distance(path[index-1], node) < radius ])
     if random.random() < mutation_rate:
         for new_node in valid_nodes:
